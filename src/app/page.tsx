@@ -1,0 +1,21 @@
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+
+export default async function Home() {
+  const db = await createClient();
+  type Announcement={id:string;title:string;body:string;category:string|null;created_at:string};type Petition={id:string;title:string;problem:string;status:string;support_count:number};type Decision={id:string;title:string;description:string;status:string;decision_type:string;deadline:string|null};
+  let announcements: Announcement[] = [], petitions: Petition[] = [], decisions: Decision[] = [], configured = false;
+  if (db) {
+    configured = true;
+    const [a,p,d] = await Promise.all([db.from('announcements').select('id,title,body,category,created_at').eq('published',true).order('created_at',{ascending:false}).limit(2),db.from('petitions').select('id,title,problem,status,support_count').eq('status','open').limit(2),db.from('decisions').select('id,title,description,status,decision_type,deadline').order('created_at',{ascending:false}).limit(2)]);
+    announcements=(a.data||[]) as Announcement[];petitions=(p.data||[]) as Petition[];decisions=(d.data||[]) as Decision[];
+  }
+  return <>
+    <section className="hero"><div><div className="eyebrow">A shared space for class governance</div><h1>Our class. Our voice.<br/>Our decisions.</h1><p>The Class Council helps classmates raise ideas, follow council work, and understand how decisions are made. Explore the public record or take part in the conversation.</p><div className="hero-actions"><Link href="/opinions" className="button">Share an opinion</Link><Link href="/petitions" className="button secondary">View petitions</Link></div></div><div className="hero-stat"><strong>4</strong><span>council members, each with one ordinary vote</span><p className="meta" style={{color:'#ced9e4',marginTop:22}}>Council meets as needed and at least once every two weeks.</p></div></section>
+    {!configured&&<div className="alert warning">Preview mode · Connect a Supabase project to enable live records, account verification, and private council workflows.</div>}
+    <section><div className="section-heading"><h2>Official announcements</h2><Link href="/announcements">All announcements →</Link></div>{announcements.length?<div className="list">{announcements.map(a=><article className="list-item" key={a.id}><span className="tag">{a.category||'Official'}</span><h3>{a.title}</h3><p>{a.body}</p><span className="meta">{new Date(a.created_at).toLocaleDateString()}</span></article>)}</div>:<div className="empty">{configured?'No announcements have been published yet.':'No official announcements published. Demonstration content is not shown as a real council record.'}</div>}</section>
+    <section><div className="section-heading"><h2>Recent decisions</h2><Link href="/decisions">Decision register →</Link></div>{decisions.length?<div className="grid two">{decisions.map(d=><article className="card" key={d.id}><span className="tag">{d.decision_type.replace('_',' ')}</span><h3>{d.title}</h3><p>{d.description}</p><span className="tag green">{d.status.replace('_',' ')}</span></article>)}</div>:<div className="empty">No official decisions have been recorded yet.</div>}</section>
+    <section><div className="section-heading"><h2>Open petitions</h2><Link href="/petitions">Browse petitions →</Link></div>{petitions.length?<div className="grid two">{petitions.map(p=><article className="card" key={p.id}><h3>{p.title}</h3><p>{p.problem}</p><span className="meta">{p.support_count} supporters</span></article>)}</div>:<div className="empty">There are no open petitions yet. A petition is a request for council action, not a binding decision.</div>}</section>
+    <div className="section-heading"><h2>Take part</h2></div><div className="grid three"><Link className="card" href="/opinions"><h3>Share an opinion</h3><p>Send a suggestion, question, concern, or feedback privately to the council.</p>Submit feedback →</Link><Link className="card" href="/petitions"><h3>Start a petition</h3><p>Describe a problem and a proposed solution for classmates to support.</p>View petitions →</Link><Link className="card" href="/governance"><h3>Understand the process</h3><p>Read the council’s roles, voting rules, and accountability commitments.</p>Read governance →</Link></div>
+  </>;
+}

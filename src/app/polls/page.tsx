@@ -1,0 +1,1 @@
+import {Records} from '@/components/records'; export default function Page(){return <><Records kind="polls"/><div className="alert warning">Account eligibility and school procedures must be configured before a poll is treated as a formal class-wide vote. Ballots are not anonymous unless explicitly implemented and verified.</div></>}

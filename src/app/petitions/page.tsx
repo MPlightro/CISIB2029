@@ -1,0 +1,1 @@
+import Link from 'next/link'; import {Records} from '@/components/records'; export default function Page(){return <><Records kind="petitions"/><div className="hero-actions"><Link className="button" href="/petitions/new">Propose a petition</Link><Link className="button secondary" href="/admin">Council sign in</Link></div></>}
